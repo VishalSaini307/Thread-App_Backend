@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { prismaClient } from './lib/db';
+import createApolloGraphqlServer from './lib/graphql';
 
 async function init() {
   const app: Application = express();
@@ -10,51 +11,18 @@ async function init() {
   app.use(express.json());
 
   // Apollo Server setup
-  const gqlServer = new ApolloServer({
-    typeDefs: `
-      type Query {
-        hello: String
-        say(name: String): String
-      }
-      type Mutation {
-        createUser( firstName : String! , lastName : String! ,email : String!, password : String!): Boolean
-      }
-    `,
-    resolvers: {
-      Query: {
-        hello: () => 'Hello World',
-        say: (_, { name}) => `Hello ${name}`,
-      },
-      Mutation :{
-        createUser : async (__,
-           {firstName , lastName ,email , password} : 
-           {firstName: string; lastName : string; email :string ; password : string;}) =>{
-                await prismaClient.user.create({
-                 data: {
-                  email,
-                  firstName,
-                  lastName,
-                  password,
-                  salt: 'random_salt',
-                 },
-                });
-                return true;
-        }
-      }
-    },
-  });
+  
 
-  await gqlServer.start();
+
 
   // Root route
   app.get('/', (req: Request, res: Response) => {
     res.json({ message: 'Server is running' });
   });
+  const gqlServer = await createApolloGraphqlServer();
 
   // Apollo GraphQL middleware
-  app.use(
-    '/graphql',
-    expressMiddleware(gqlServer, {
+  app.use('/graphql',expressMiddleware(gqlServer, {
       context: async ({ req }) => ({ token: req.headers.authorization || null }),
     }) as unknown as express.RequestHandler // Resolve type conflict
   );
