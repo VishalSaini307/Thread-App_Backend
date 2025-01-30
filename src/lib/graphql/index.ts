@@ -7,7 +7,7 @@ async function createApolloGraphqlServer() {
 
   const typeDefs = gql`
     type Query {
-       hello:String
+       ${User.queries}
     }
     type Mutation {
       ${User.mutations}

@@ -3,6 +3,9 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { prismaClient } from './lib/db';
 import createApolloGraphqlServer from './lib/graphql';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 async function init() {
   const app: Application = express();
